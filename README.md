@@ -7,6 +7,7 @@ npm install
 ```
  - Create a .env file.
  - Assign the following environment variables:
+ 
  | Variable name      | Description                                                        |
  | ------------------ | ------------------------------------------------------------------ |
  | STEAM_LOGIN_SECURE | steamLoginSecure cookie from your browser after signing into steam |
@@ -15,7 +16,7 @@ npm install
 ## Running the app
 ```node app.js <appid of the game>``` 
 
-**Note:** Refer to the samples folder for a good idea of what kind of data is retrieved.
+**Note:** Refer to the samples folder for a good idea of what kind of data is retrieved. The '.' character in all names fetched is replaced with [dot] because MongoDB doesn't like dots in object keys.
 
 ## FAQs
 ### Why?
