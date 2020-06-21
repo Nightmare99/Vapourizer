@@ -1,0 +1,17 @@
+{
+  "name": "vapourizer",
+  "version": "1.0.0",
+  "description": "Fetches data from steam community market and puts it in db.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nightmare99",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "dotenv": "^8.2.0",
+    "mongoose": "^5.9.19"
+  },
+  "type": "module"
+}
