@@ -1,4 +1,4 @@
-# Vapourizer
+# Vapourizer 💨
 A node app to get the price histories of ALL items of a given steam game.
 
 ## Setting up the environment
@@ -25,7 +25,7 @@ Data. We needed data for [this](https://github.com/Nightmare99/SteamQuest). Scra
 ### I need data for game X, and your app doesn't support it.
 Just add in the appid to the ```gameDict``` object in *app.js* with the game's name. Simple as that.
 
-### IT TAKES SO LONG >:(
+### IT TAKES SO LONG 🤬
 Bruh steam doesn't like us spamming their servers, so to avoid getting a 429: too many requests, there's a 10 second delay between every request. You can maybe try reducing it, but hey, consider yourself warned.
 
 ### There is only one actual question in the FAQs
