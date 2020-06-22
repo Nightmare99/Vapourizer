@@ -53,9 +53,9 @@ async function getItemPriceHistory(name) {
             cookie: 'steamLoginSecure=' + process.env.STEAM_LOGIN_SECURE,
         }
     };
-    name = name.replace("/", "-");
+    name = name.replace("/", "-").replace("&", "[PERCENTAGE]26");
     var URI = 'https://steamcommunity.com/market/pricehistory/?appid=' + appid + '&market_hash_name=' + name;
-    var encodedURL = encodeURI(URI);
+    var encodedURL = encodeURI(URI).replace("[PERCENTAGE]", "%");
     console.log('Now fetching: ' + encodedURL);
     var response = await axios.get(encodedURL, opts);
     var prices = response.data.prices;
