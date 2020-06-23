@@ -11,6 +11,7 @@
   "dependencies": {
     "axios": "^0.19.2",
     "dotenv": "^8.2.0",
+    "gridfs-stream": "^1.1.1",
     "mongoose": "^5.9.19"
   },
   "type": "module"

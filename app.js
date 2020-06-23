@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 import axios from 'axios';
+import fs from 'fs';
 import mongoose from 'mongoose';
+import gridfs from 'gridfs-stream';
 
 dotenv.config();
 mongoose.connect(process.env.MONGO_URL, { 
@@ -8,11 +10,9 @@ mongoose.connect(process.env.MONGO_URL, {
     useFindAndModify: false,
     useUnifiedTopology: true 
 });
-
-var schema = mongoose.Schema({
-    gameName: String,
-    data: Object
-}, { strict: false });
+mongoose.Promise = global.Promise;
+gridfs.mongo = mongoose.mongo;
+var connection = mongoose.connection;
 
 function sleep(ms) { // Steam servers are paranoid about DDoS, so we wait 10s before each new request to their API
     return new Promise((resolve) => {
@@ -44,6 +44,7 @@ async function getItemNames() {
         start += 100;
         await sleep(10000);
     }
+    console.log('Fetched: ' + itemNames.length);
     return itemNames;
 }
 
@@ -73,12 +74,28 @@ async function run() {
         }
     }
     console.log(results);
-    var Data = mongoose.model('Data', schema);
-    var data = new Data({gameName: gameDict[appid], data: results});
-    Data.findOneAndUpdate({gameName: gameDict[appid]}, data, {upsert: true}, function(err, doc) {
-        if (err) console.log(err);
-        else console.log('DB successfully updated.');
-    }); 
+    console.log(Object.keys(results).length);
+    
+    fs.writeFileSync(gameDict[appid] + '.json', JSON.stringify(results));
+
+    var gfs = gridfs(connection.db);
+    var writestream = gfs.createWriteStream({
+        _id: gameDict[appid], 
+        filename: gameDict[appid] + '.json',
+        mode: 'w',
+        content_type: 'application/json',
+        root: 'steamData'
+    });
+    fs.createReadStream(gameDict[appid] + '.json').pipe(writestream);
+    writestream.on('close', function (file) {
+       console.log('File Created : ' + file.filename);
+    });
+    // var Data = mongoose.model('Data', schema);
+    // var data = new Data({gameName: gameDict[appid], data: results});
+    // Data.findOneAndUpdate({gameName: gameDict[appid]}, data, {upsert: true}, function(err, doc) {
+    //     if (err) console.log(err);
+    //     else console.log('DB successfully updated. Object has this many keys: ' + Object.keys(doc.data).length);
+    // }); 
 }
 
 run(); // Run Barry, run!
