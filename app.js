@@ -3,6 +3,7 @@ import axios from 'axios';
 import fs from 'fs';
 import mongoose from 'mongoose';
 import gridfs from 'gridfs-stream';
+import { exit } from 'process';
 
 dotenv.config();
 mongoose.connect(process.env.MONGO_URL, { 
@@ -20,12 +21,16 @@ function sleep(ms) { // Steam servers are paranoid about DDoS, so we wait 10s be
     });
 }  
 
-var appid = Number(process.argv[2]); // App ID of the target game. CSG0 - 730, DotA 2 - 570, PUBG - 578080. You will only have to change here.
+var appid = process.argv[2]; // App ID of the target game. CSG0 - 730, DotA 2 - 570, PUBG - 578080. You will only have to change here.
 var gameDict = {
-    730: 'CSGO',
-    570: 'DotA2',
-    578080: 'PUBG'
+    '730': 'CSGO',
+    '570': 'DotA2',
+    '578080': 'PUBG'
 }; // Add any other games here. Format - appid: name
+if (Object.keys(gameDict).indexOf(String(appid)) == -1) {
+    console.log('This game is not supported. Refer the README to find out how to add support.');
+    exit(127);
+}
 
 async function getItemNames() {
     var itemNames = [];
@@ -79,6 +84,22 @@ async function run() {
     fs.writeFileSync(gameDict[appid] + '.json', JSON.stringify(results));
 
     var gfs = gridfs(connection.db);
+    var options = {
+        _id: gameDict[appid],
+        root: 'steamData'
+    };
+    gfs.exist(options, function (err, found) {
+        if (err) console.log(err);
+        if (found) {
+            console.log('Data already exists in GridFS, deleting...');
+            gfs.remove(options, function (err) {
+                if (err) console.log(err);
+                console.log('Deleted existing record.');
+            });
+        }
+        else console.log('Data not found in GridFS, creating new record...');
+    });
+
     var writestream = gfs.createWriteStream({
         _id: gameDict[appid], 
         filename: gameDict[appid] + '.json',
@@ -90,12 +111,6 @@ async function run() {
     writestream.on('close', function (file) {
        console.log('File Created : ' + file.filename);
     });
-    // var Data = mongoose.model('Data', schema);
-    // var data = new Data({gameName: gameDict[appid], data: results});
-    // Data.findOneAndUpdate({gameName: gameDict[appid]}, data, {upsert: true}, function(err, doc) {
-    //     if (err) console.log(err);
-    //     else console.log('DB successfully updated. Object has this many keys: ' + Object.keys(doc.data).length);
-    // }); 
 }
 
 run(); // Run Barry, run!
