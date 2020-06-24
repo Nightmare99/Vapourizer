@@ -16,7 +16,7 @@ npm install
 ## Running the app
 ```node app.js <appid of the game>``` 
 
-**Note:** Refer to the samples folder for a good idea of what kind of data is retrieved. The '.' character in all names fetched is replaced with [dot] because MongoDB doesn't like dots in object keys.
+**Note:** Refer to the samples folder for a good idea of what kind of data is retrieved.
 
 ## FAQs
 ### Why?

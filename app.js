@@ -74,7 +74,7 @@ async function run() {
     console.log('Total number of items: ' + names.length);
     for (var name of names) {
         if (name != undefined) {
-            results[name.replace('.', '[dot]')] = await getItemPriceHistory(name); // mongodb doesn't allow . in key names
+            results[name] = await getItemPriceHistory(name);
             await sleep(10000);
         }
     }
