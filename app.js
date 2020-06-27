@@ -41,13 +41,27 @@ async function getItemNames() {
     for (var i of results)
         itemNames.push(i.name)
     while (itemNames.length < total) {
-        var response = await axios.get('https://steamcommunity.com/market/search/render/?start=' + start + '&search_descriptions=0&sort_column=default&sort_dir=desc&appid=' + appid + '&norender=1&count=100')
-        var results = response.data.results;
-        for (var i of results) {
-            itemNames.push(i.hash_name);
+        try {
+            var response = await axios.get('https://steamcommunity.com/market/search/render/?start=' + start + '&search_descriptions=0&sort_column=default&sort_dir=desc&appid=' + appid + '&norender=1&count=100')
+            var results = response.data.results;
+            for (var i of results) {
+                itemNames.push(i.hash_name);
+                console.log(i.hash_name);
+            }
+            start += 100;
+            await sleep(0);
         }
-        start += 100;
-        await sleep(10000);
+        catch (error) {
+            // console.log(error.res.headers);
+            // console.log(error.res.rawHeaders);
+            // console.log(error.response.headers);
+            // fs.writeFileSync('err' + '.json', JSON.stringify(error.response));
+            if (error.response.status === 429) {
+                console.log("Error 429: retrying after 10 seconds...");
+                await sleep(10000);
+            }
+            else console.log(error.response.status);
+        }
     }
     console.log('Fetched: ' + itemNames.length);
     return itemNames;
@@ -62,10 +76,24 @@ async function getItemPriceHistory(name) {
     name = name.replace("/", "-").replace("&", "[PERCENTAGE]26");
     var URI = 'https://steamcommunity.com/market/pricehistory/?appid=' + appid + '&market_hash_name=' + name;
     var encodedURL = encodeURI(URI).replace("[PERCENTAGE]", "%");
-    console.log('Now fetching: ' + encodedURL);
-    var response = await axios.get(encodedURL, opts);
-    var prices = response.data.prices;
-    return prices;
+    var success = false;
+    while (!success) {
+        try {
+            console.log('Now fetching: ' + encodedURL);
+            var response = await axios.get(encodedURL, opts);
+            var prices = response.data.prices;
+            success = true;
+            return prices;
+        }
+        catch (error) {
+            if (error.response.status === 400) {
+                console.log("Your STEAM_LOGIN_SECURE value seems to be incorrect/outdated. Please change it and restart.");
+                exit(1);
+            }
+            console.log("There was an error fetching that link, trying again in 10 seconds...");
+            await sleep(10000);
+        }
+    }
 }
 
 async function run() {
@@ -75,7 +103,7 @@ async function run() {
     for (var name of names) {
         if (name != undefined) {
             results[name] = await getItemPriceHistory(name);
-            await sleep(10000);
+            await sleep(0);
         }
     }
     console.log(results);
