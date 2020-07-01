@@ -21,9 +21,9 @@ npm install
 ## How it works
 There are 2 phases - the item name collection phase (phase 1) and the price history collection phase (phase 2). 
 
-In phase 1, the names of all the items in the market are collected and stored in a json file which is named as *<Your-Game-Name>Names.json*. 
+In phase 1, the names of all the items in the market are collected and stored in a json file which is named as *[Your-Game-Name]Names.json*. 
 
-Then, in phase 2, each and every single item name we have fetched is used to get the price history of that item. This is again stored in a json file named *<Your-Game-Name>.json* and uploaded to MongoDB using GridFS.
+Then, in phase 2, each and every single item name we have fetched is used to get the price history of that item. This is again stored in a json file named *[Your-Game-Name].json* and uploaded to MongoDB using GridFS.
 
 ## FAQs
 ### Why?
@@ -39,4 +39,4 @@ Bruh steam doesn't like us spamming their servers, so every now and then during 
 Run app.js with ```--max-old-space-size <MORE RAM>```.
 
 ### The app crashed after phase 1. Do I have to run the entire thing again?
-No, after phase 1, a new json file with the name *<Your-Game-Name>Names.json* is created (refer samples). Simply run ```node app.js <appid of the game> true``` 
+No, after phase 1, a new json file with the name *[Your-Game-Name]Names.json* is created (refer samples). Simply run ```node app.js <appid of the game> true``` 
