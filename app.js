@@ -52,7 +52,6 @@ async function getItemNames() {
             await sleep(0);
         }
         catch (error) {
-<<<<<<< HEAD
             if (error.response !== undefined) {
                 if (error.response.status === 429) {
                     console.log("Error 429: retrying after 1 minute...");
@@ -61,17 +60,6 @@ async function getItemNames() {
                 else console.log(error.response);
             }
             else console.log("There was an error, retrying...");
-=======
-            // console.log(error.res.headers);
-            // console.log(error.res.rawHeaders);
-            // console.log(error.response.headers);
-            // fs.writeFileSync('err' + '.json', JSON.stringify(error.response));
-            if (error.response.status === 429) {
-                console.log("Error 429: retrying after 10 seconds...");
-                await sleep(10000);
-            }
-            else console.log(error.response.status);
->>>>>>> d35489d917781871cbb5a47c3a09e0366e49d73f
         }
     }
     console.log('Fetched: ' + itemNames.length);
@@ -87,11 +75,7 @@ async function getItemPriceHistory(name) {
     };
     name = name.replace("/", "-").replace("&", "((PERCENTAGE))26").replace("+","((PLUS))");
     var URI = 'https://steamcommunity.com/market/pricehistory/?appid=' + appid + '&market_hash_name=' + name;
-<<<<<<< HEAD
     var encodedURL = encodeURI(URI).replace("((PERCENTAGE))", "%").replace("((PLUS))", "%2B");
-=======
-    var encodedURL = encodeURI(URI).replace("[PERCENTAGE]", "%");
->>>>>>> d35489d917781871cbb5a47c3a09e0366e49d73f
     var success = false;
     while (!success) {
         try {
@@ -102,32 +86,11 @@ async function getItemPriceHistory(name) {
             return prices;
         }
         catch (error) {
-<<<<<<< HEAD
             if (error.response !== undefined)
                 if (error.response.status === 400) {
                     console.log("There was an error, retrying now... If this persists, please check your STEAM_LOGIN_SECURE cookie.");
                 }
             else console.log("There was an error fetching that link, trying again...");
-=======
-            if (error.response.status === 400) {
-                console.log("Your STEAM_LOGIN_SECURE value seems to be incorrect/outdated. Please change it and restart.");
-                exit(1);
-            }
-            console.log("There was an error fetching that link, trying again in 10 seconds...");
-            await sleep(10000);
-        }
-    }
-}
-
-async function run() {
-    const names = await getItemNames();
-    const results = {};
-    console.log('Total number of items: ' + names.length);
-    for (var name of names) {
-        if (name != undefined) {
-            results[name] = await getItemPriceHistory(name);
-            await sleep(0);
->>>>>>> d35489d917781871cbb5a47c3a09e0366e49d73f
         }
     }
 }
