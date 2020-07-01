@@ -41,15 +41,29 @@ async function getItemNames() {
     for (var i of results)
         itemNames.push(i.name)
     while (itemNames.length < total) {
-        var response = await axios.get('https://steamcommunity.com/market/search/render/?start=' + start + '&search_descriptions=0&sort_column=default&sort_dir=desc&appid=' + appid + '&norender=1&count=100')
-        var results = response.data.results;
-        for (var i of results) {
-            itemNames.push(i.hash_name);
+        try {
+            var response = await axios.get('https://steamcommunity.com/market/search/render/?start=' + start + '&search_descriptions=0&sort_column=default&sort_dir=desc&appid=' + appid + '&norender=1&count=100')
+            var results = response.data.results;
+            for (var i of results) {
+                itemNames.push(i.hash_name);
+                console.log(i.hash_name);
+            }
+            start += 100;
+            await sleep(0);
         }
-        start += 100;
-        await sleep(10000);
+        catch (error) {
+            if (error.response !== undefined) {
+                if (error.response.status === 429) {
+                    console.log("Error 429: retrying after 1 minute...");
+                    await sleep(60000);
+                }
+                else console.log(error.response);
+            }
+            else console.log("There was an error, retrying...");
+        }
     }
     console.log('Fetched: ' + itemNames.length);
+    fs.writeFileSync(gameDict[appid] + 'Names.json', JSON.stringify(itemNames));
     return itemNames;
 }
 
@@ -59,30 +73,29 @@ async function getItemPriceHistory(name) {
             cookie: 'steamLoginSecure=' + process.env.STEAM_LOGIN_SECURE,
         }
     };
-    name = name.replace("/", "-").replace("&", "[PERCENTAGE]26");
+    name = name.replace("/", "-").replace("&", "((PERCENTAGE))26").replace("+","((PLUS))");
     var URI = 'https://steamcommunity.com/market/pricehistory/?appid=' + appid + '&market_hash_name=' + name;
-    var encodedURL = encodeURI(URI).replace("[PERCENTAGE]", "%");
-    console.log('Now fetching: ' + encodedURL);
-    var response = await axios.get(encodedURL, opts);
-    var prices = response.data.prices;
-    return prices;
-}
-
-async function run() {
-    const names = await getItemNames();
-    const results = {};
-    console.log('Total number of items: ' + names.length);
-    for (var name of names) {
-        if (name != undefined) {
-            results[name] = await getItemPriceHistory(name);
-            await sleep(10000);
+    var encodedURL = encodeURI(URI).replace("((PERCENTAGE))", "%").replace("((PLUS))", "%2B");
+    var success = false;
+    while (!success) {
+        try {
+            console.log('Now fetching: ' + encodedURL);
+            var response = await axios.get(encodedURL, opts);
+            var prices = response.data.prices;
+            success = true;
+            return prices;
+        }
+        catch (error) {
+            if (error.response !== undefined)
+                if (error.response.status === 400) {
+                    console.log("There was an error, retrying now... If this persists, please check your STEAM_LOGIN_SECURE cookie.");
+                }
+            else console.log("There was an error fetching that link, trying again...");
         }
     }
-    console.log(results);
-    console.log(Object.keys(results).length);
-    
-    fs.writeFileSync(gameDict[appid] + '.json', JSON.stringify(results));
+}
 
+function writeToGridFS(appid) {
     var gfs = gridfs(connection.db);
     var options = {
         _id: gameDict[appid],
@@ -113,4 +126,44 @@ async function run() {
     });
 }
 
-run(); // Run Barry, run!
+async function run() {
+    const names = await getItemNames();
+    const results = {};
+    console.log('Total number of items: ' + names.length);
+    for (var name of names) {
+        if (name != undefined) {
+            results[name] = await getItemPriceHistory(name);
+            await sleep(0);
+        }
+    }
+    console.log(results);
+    console.log(Object.keys(results).length);
+    
+    fs.writeFileSync(gameDict[appid] + '.json', JSON.stringify(results));
+
+    writeToGridFS(appid);
+}
+
+async function runWithoutPhase1(appid) {
+    var raw = fs.readFileSync(gameDict[appid] + 'Names.json');
+    var names = JSON.parse(raw);
+    var results = {};
+    for (var name of names) {
+        if (name != undefined) {
+            results[name] = await getItemPriceHistory(name);
+            await sleep(0);
+        }
+    }
+    console.log(results);
+    console.log(Object.keys(results).length);
+    
+    fs.writeFileSync(gameDict[appid] + '.json', JSON.stringify(results));
+
+    writeToGridFS(appid);
+}
+
+if (process.argv[3] == 'true') {
+    console.log("Phase 1 skipped, using local item name list...");
+    runWithoutPhase1(appid);
+}
+else run(); 
